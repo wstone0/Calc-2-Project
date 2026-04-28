@@ -1,7 +1,22 @@
 ---
-title: "Project_R"
+title: "Calculus II Project"
+authors: "Tilghman Clark, Elliot Fox-Deel and Wesley Stone"
 format: html
 editor: visual
 ---
 
-math stuff
+```{r}
+# You might have to install this (install.packages("tidyverse")) at first, it has a ton of stuff and is really generally useful
+library(tidyverse)
+```
+
+```{r}
+fx <- function(x) -(x-2)^2+4
+gx <- function(x) {}
+hxy <- function(x,y) {}
+```
+
+```{r}
+integrate(fx,0,4)
+```
+
