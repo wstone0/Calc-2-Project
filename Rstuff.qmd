@@ -1,0 +1,7 @@
+---
+title: "Project_R"
+format: html
+editor: visual
+---
+
+math stuff
