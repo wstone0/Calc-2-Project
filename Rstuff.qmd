@@ -11,12 +11,211 @@ library(tidyverse)
 ```
 
 ```{r}
+# Examples
 fx <- function(x) -(x-2)^2+4
 gx <- function(x) {}
 hxy <- function(x,y) {}
 ```
 
 ```{r}
+# exact integral
 integrate(fx,0,4)
+```
+
+## Single-Variable Functions
+
+```{r}
+left_riemann <- function(f,a,b,n){
+  sum = 0
+  step = (b-a)/n
+  for (i in 1:n) {
+    int = step*f(a)
+    sum = sum + int
+    a = a + step
+  }
+  return(sum)
+}
+```
+
+```{r}
+right_riemann <- function(f,a,b,n){
+  sum = 0
+  step = (b-a)/n
+  for (i in 1:n) {
+    int = step*f(a+step) # each interval is a to a+step
+    sum = sum + int
+    a = a + step
+  }
+  return(sum)
+}
+```
+
+```{r}
+midpoint_riemann <- function(f,a,b,n){
+  sum = 0
+  step = (b-a)/n
+  for (i in 1:n) {
+    int = step*f((2*a+step)/2)
+    sum = sum + int
+    a = a + step
+  }
+  return(sum)
+}
+```
+
+```{r}
+trapezoid <- function(f,a,b,n){
+  sum = 0
+  step = (b-a)/n
+  for (i in 1:n) {
+    rect = step*f(a)
+    tri = (f(a+step) - f(a))*step/2
+    sum = sum + rect + tri
+    a = a + step
+  }
+  return(sum)
+}
+```
+
+```{r}
+simpsons <- function(f,a,b,n) {
+  sum = 0
+  step = (b-a)/n
+  for (i in 1:n) {
+    int = (step/6)*(f(a) + 4*f((2*a+step)/2) + f(a+step))
+    sum = sum + int
+    a = a + step
+  }
+  return(sum)
+}
+```
+
+```{r}
+# testing
+fx <- function(x) 2
+gx <- function(x) 2*x
+hx <- function(x) x^2
+
+left_riemann(fx,0,4,4)
+right_riemann(fx,0,4,4)
+midpoint_riemann(fx,0,4,4)
+trapezoid(fx,0,4,4)
+simpsons(fx,0,4,4)
+
+left_riemann(gx,0,4,4)
+right_riemann(gx,0,4,4)
+midpoint_riemann(gx,0,4,4)
+trapezoid(gx,0,4,4)
+simpsons(gx,0,4,4)
+
+left_riemann(hx,0,4,4)
+right_riemann(hx,0,4,4)
+midpoint_riemann(hx,0,4,4)
+trapezoid(hx,0,4,4)
+simpsons(hx,0,4,4)
+```
+
+## Multivariable functions
+
+```{r}
+# The following function will approximate a double of a given function of two variables over a rectangle [a,b]x[c,d] using n*m rectangles of Area = (b-a)/n*(d-c)/m, the approximation is made by computing the value of the function at the midpoint of each subrectangle
+
+midpoint_2d <- function(Fxy=function(x,y){},a,b,n,c,d,m){
+  Sum = 0
+  for (i in 1:n) {
+    for (j in 1:m) {
+      Sum = Sum + Fxy(a+(b-a)*(2*i-1)/(2*n),c+(d-c)*(2*j-1)/(2*m))*(b-a)*(d-c)/(m*n)
+    }
+  }
+
+  return(print(Sum,digits=20))
+}
+```
+
+```{r}
+# For 1d, we weight the interval 1-4-1. To move to 2d, we multiply [1 4 1] in the x direction by [1 4 1] in the y direction, producing the matrix of weights [1 4 1, 4 16 4, 1 4 1] over each subrectangle.
+
+simpsons_2d <- function(f,a,b,n,c,d,m) {
+  sum <- 0
+  step_x <- (b - a)/n
+  step_y <- (d - c)/m
+  
+  curr_y <- c
+  for (j in 1:m) {
+    curr_x <- a
+    for (i in 1:n) {
+      # Calculate midpoints for the current grid cell
+      mid_x <- curr_x + step_x/2
+      mid_y <- curr_y + step_y/2
+      next_x <- curr_x + step_x
+      next_y <- curr_y + step_y
+      
+      # Corners (weight = 1)
+      corners <- f(curr_x, curr_y) + f(next_x, curr_y) + f(curr_x, next_y) + f(next_x, next_y)
+      
+      # Edges (weight = 4)
+      edges <- f(mid_x, curr_y) + f(curr_x, mid_y) + f(next_x, mid_y) + f(mid_x, next_y)
+      
+      # Center (weight = 16)
+      center <- f(mid_x, mid_y)
+      
+      # Volume of the current sub-region
+      vol <- (step_x/6) * (step_y/6) * (corners + 4*edges + 16*center)
+      
+      sum <- sum + vol
+      
+      curr_x <- next_x
+    }
+    curr_y <- next_y
+  }
+  return(sum)
+}
+```
+
+```{r}
+# The regular trapezoids take the average of a and b as the height of each interval, so here we just take the average of the four corners of the rectangle and multiply by the area.
+
+trapezoid_2d <- function(f,a,b,n,c,d,m) {
+  sum <- 0
+  step_x <- (b - a)/n
+  step_y <- (d - c)/m
+  
+  curr_y <- c
+  for (j in 1:m) {
+    curr_x <- a
+    for (i in 1:n) {
+      next_x <- curr_x + step_x
+      next_y <- curr_y + step_y
+      
+      # Evaluate the function at the 4 corners of the grid cell
+      corner1 <- f(curr_x, curr_y)
+      corner2 <- f(next_x, curr_y)
+      corner3 <- f(curr_x, next_y)
+      corner4 <- f(next_x, next_y)
+      
+      # Average the 4 corners and multiply by the base area (step_x * step_y)
+      vol <- (step_x * step_y) * (corner1 + corner2 + corner3 + corner4)/4
+      
+      sum <- sum + vol
+      
+      curr_x <- next_x
+    }
+    curr_y <- next_y
+  }
+  return(sum)
+}
+```
+
+```{r}
+fxy <- function(x,y) return(2)
+gxy <- function(x,y) return(x^2 + y^2)
+
+simpsons_2d(fxy, a=0, b=1, n=10, c=0, d=1, m=10)
+trapezoid_2d(fxy, a=0, b=1, n=10, c=0, d=1, m=10)
+midpoint_2d(fxy, a=0, b=1, n=10, c=0, d=1, m=10)
+
+simpsons_2d(gxy, a=0, b=1, n=10, c=0, d=1, m=10)
+trapezoid_2d(gxy, a=0, b=1, n=10, c=0, d=1, m=10)
+midpoint_2d(gxy, a=0, b=1, n=10, c=0, d=1, m=10)
 ```
 
