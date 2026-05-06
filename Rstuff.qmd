@@ -218,4 +218,3 @@ simpsons_2d(gxy, a=0, b=1, n=10, c=0, d=1, m=10)
 trapezoid_2d(gxy, a=0, b=1, n=10, c=0, d=1, m=10)
 midpoint_2d(gxy, a=0, b=1, n=10, c=0, d=1, m=10)
 ```
-
